@@ -1,0 +1,58 @@
+{
+  "main": {
+    "title": {
+      "default": "{{site.name}} - інтернет магазин будівельного інструменту"
+    },
+    "keywords": {},
+    "description": {
+      "default": "{{site.name}} - інтернет магазин будівельної техніки та інструменту, шурупокрутів, перфораторів, дискові пили, електролобзики, генератори, будівельна техніка. Доставка в Київ, Дніпропетровськ, Харків, Львів, Одеса"
+    }
+  },
+  "category": {
+    "title": {
+      "default": "{{category.localName}}  в інтернет-магазині {{site.name}}"
+    },
+    "keywords": {
+      "default": "{{category.localName}}  ціна, купити"
+    },
+    "description": {
+      "default": "{{category.localName}}  за низькою ціною в інтернет магазині {{site.name}}"
+    }
+  },
+  "brand": {
+    "title": {
+      "default": "{{brand.localName}} в інтернет-магазині {{site.name}}"
+    },
+    "keywords": {
+      "default": "Інструмент {{brand.localName}} ціна, купити"
+    },
+    "description": {
+      "default": "Інструмент {{brand.localName}} в інтернет-магазині {{site.name}}"
+    }
+  },
+  "brands": {
+    "title": {
+      "default": "Бренди інтернет магазину {{site.name}}"
+    },
+    "keywords": {},
+    "description": {}
+  },
+  "product": {
+    "title": {
+      "default": "{{product.localName}} купити в {{site.name}}"
+    },
+    "keywords": {
+      "default": "{{product.localName}} ціна, купити"
+    },
+    "description": {
+      "default": "{{product.localName}} за низькою ціною в інтернет магазині {{site.name}}"
+    }
+  },
+  "page": {
+    "title": {
+      "default": "{{page.title}}"
+    },
+    "keywords": {},
+    "description": {}
+  }
+}
