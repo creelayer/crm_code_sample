@@ -11,7 +11,7 @@ public interface PromoCodeManage extends PromoConditionSupport<PromoCode> {
 
   void generate(GeneratePromoCodeCommand command);
 
-  PromoCode update(UpdatePromoCodeCommand command);
+  void update(UpdatePromoCodeCommand command);
 
   void remove(UUID uuid);
 }

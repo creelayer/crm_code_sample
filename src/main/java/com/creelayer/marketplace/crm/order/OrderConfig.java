@@ -1,6 +1,7 @@
 package com.creelayer.marketplace.crm.order;
 
 import com.creelayer.marketplace.crm.order.core.*;
+import com.creelayer.marketplace.crm.order.core.outgoing.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

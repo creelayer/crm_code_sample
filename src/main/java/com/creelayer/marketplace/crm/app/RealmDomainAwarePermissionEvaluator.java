@@ -1,39 +1,45 @@
 package com.creelayer.marketplace.crm.app;
 
-import com.creelayer.marketplace.crm.common.NotFoundException;
+import com.creelayer.marketplace.crm.common.ForbiddenException;
 import com.creelayer.marketplace.crm.common.reaml.RealmIdentity;
-import com.creelayer.marketplace.crm.market.core.incoming.ManagerSearch;
-import com.creelayer.marketplace.crm.market.core.projection.ManagerDetail;
+import com.creelayer.marketplace.crm.market.core.model.Manager;
 import com.creelayer.marketplace.crm.secutiry.DomainAwarePermissionEvaluator;
 import com.creelayer.marketplace.crm.secutiry.ResourceOwner;
-import lombok.RequiredArgsConstructor;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Tuple;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-@RequiredArgsConstructor
 @Component
 public class RealmDomainAwarePermissionEvaluator extends DomainAwarePermissionEvaluator {
 
-    private final ManagerSearch managerSearch;
+    private static final String REALM_PERMISSION_QUERY = "SELECT m.account.uuid as aid, m.market.uuid as rid, m.status as status FROM Manager m WHERE m.market.uuid = :realm AND m.account.uuid = :account";
+
+    @PersistenceContext
+    private EntityManager em;
 
     @Override
     public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
-
         if (targetDomainObject instanceof RealmIdentity realm) {
+            try {
+                Tuple result = em.createQuery(REALM_PERMISSION_QUERY, Tuple.class)
+                        .setParameter("account", UUID.fromString(authentication.getName()))
+                        .setParameter("realm", realm.getUuid())
+                        .getSingleResult();
 
-            ManagerDetail manager = managerSearch.
-                    getDetail(UUID.fromString(authentication.getName()), realm.getUuid())
-                    .orElseThrow(() -> new NotFoundException("Invalid manager"));
+                if (permission.equals("session"))
+                    return result.get("status").equals(Manager.Status.ACTIVE);
 
-            if (permission.equals("session"))
-                return manager.isActive();
-
-            ResourceOwner resource = new ResourceOwner(manager.getMarket().getAccount().getUuid().toString(), realm.getUuid().toString());
-            return super.hasPermission(authentication, resource, permission);
+                ResourceOwner resource = new ResourceOwner(result.get("aid").toString(), result.get("rid").toString());
+                return super.hasPermission(authentication, resource, permission);
+            } catch (NoResultException e) {
+                throw new ForbiddenException("Invalid access");
+            }
         }
-
         return super.hasPermission(authentication, targetDomainObject, permission);
     }
 }

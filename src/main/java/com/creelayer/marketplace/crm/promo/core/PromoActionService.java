@@ -24,24 +24,24 @@ public class PromoActionService implements PromoActionManage {
     private final PromoActionCommandMapper mapper = new PromoActionCommandMapper();
 
     @Override
-    public PromoAction create(CreatePromoActionCommand command) {
+    public UUID create(CreatePromoActionCommand command) {
         PromoGroup group = promoGroupRepository.findById(command.getGroup())
                 .orElseThrow(() -> new PromoNotFoundException("Promo group not found"));
         PromoAction action = mapper.map(group, command);
-        return promoActionRepository.save(action);
+        return promoActionRepository.save(action).getUuid();
     }
 
     @Override
-    public PromoAction update(UpdatePromoActionCommand command) {
+    public void update(UpdatePromoActionCommand command) {
         PromoAction action = promoActionRepository.findById(command.getAction())
                 .orElseThrow(() -> new PromoNotFoundException("Promo action not found"));
-        return promoActionRepository.save(mapper.map(command, action));
+        promoActionRepository.save(mapper.map(command, action));
     }
 
     @Override
     public PromoAction update(ManagePromoConditionCommand command) {
 
-        PromoAction action = promoActionRepository.findById(command.getUuid())
+        PromoAction action = promoActionRepository.findById(command.getEntity())
                 .orElseThrow(() -> new PromoNotFoundException("Promo action not found"));
 
         action.setConditions(mapper.map(command.getConditions()));

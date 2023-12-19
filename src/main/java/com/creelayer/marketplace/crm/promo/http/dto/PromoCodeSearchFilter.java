@@ -4,12 +4,13 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import java.util.UUID;
 
-
 @Getter
 @Setter
+@Accessors(chain = true)
 @NoArgsConstructor
 public class PromoCodeSearchFilter {
 
@@ -31,9 +32,4 @@ public class PromoCodeSearchFilter {
     public Status status;
 
     public State state;
-
-    public PromoCodeSearchFilter(UUID client, State state) {
-        this.client = client;
-        this.state = state;
-    }
 }

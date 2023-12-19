@@ -11,7 +11,7 @@ public class ManagerView {
 
     private final UUID uuid;
 
-    private List<String> permissions;
+    private final List<String> permissions;
 
     public ManagerView(Manager manager, List<String> permissions) {
         this.uuid = manager.getUuid();

@@ -10,7 +10,6 @@ import com.creelayer.marketplace.crm.market.core.model.Market;
 import com.creelayer.setting.client.Setting;
 import com.creelayer.setting.client.SettingApi;
 import com.creelayer.marketplace.crm.promo.infrastucture.convertor.PhoneToPromoClientConverter;
-import com.creelayer.marketplace.crm.client.infrastucture.convertor.PhoneToClientConverter;
 import com.creelayer.setting.client.SettingsConfig;
 import com.creelayer.wallet.client.config.WalletConfig;
 import jakarta.annotation.PostConstruct;
@@ -44,7 +43,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addFormatters(FormatterRegistry registry) {
         registry.addConverter(new RealmConvertor());
-        registry.addConverter(new PhoneToClientConverter(clientIdentity, realmIdentityProvider()));
         registry.addConverter(new PhoneToPromoClientConverter(clientIdentity, realmIdentityProvider()));
     }
 

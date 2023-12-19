@@ -10,28 +10,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ManagePromoConditionCommand {
 
-    private UUID uuid;
+    private UUID entity;
 
     private List<Condition> conditions;
-
-    @Getter
-    @AllArgsConstructor
-    public static class Condition {
-
-        private String path;
-
-
-        private String labels;
-
-
-        private Long priceFrom;
-
-
-        private Long priceTo;
-
-        private List<String> skus;
-
-        private boolean invert;
-    }
 
 }

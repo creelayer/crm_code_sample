@@ -1,12 +1,11 @@
 package com.creelayer.marketplace.crm.order.core.model;
 
 import lombok.*;
-
 import java.util.Objects;
 
 @Getter
 @EqualsAndHashCode(of = {"code"})
-@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderPromoCode {
     public enum TYPE {
         PERCENT, AMOUNT

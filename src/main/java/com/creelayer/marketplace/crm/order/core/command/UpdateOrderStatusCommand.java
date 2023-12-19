@@ -9,7 +9,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UpdateOrderStatusCommand {
 
-    private UUID uuid;
+    private UUID order;
 
     private String status;
 

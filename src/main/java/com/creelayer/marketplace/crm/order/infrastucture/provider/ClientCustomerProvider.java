@@ -7,7 +7,7 @@ import com.creelayer.marketplace.crm.client.core.command.IdentityClientCommand;
 import com.creelayer.marketplace.crm.client.core.model.Client;
 import com.creelayer.marketplace.crm.client.core.model.Realm;
 import com.creelayer.marketplace.crm.order.core.model.OrderCustomer;
-import com.creelayer.marketplace.crm.order.core.CustomerProvider;
+import com.creelayer.marketplace.crm.order.core.outgoing.CustomerProvider;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 

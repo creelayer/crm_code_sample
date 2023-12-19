@@ -7,9 +7,13 @@ import com.creelayer.marketplace.crm.order.core.model.Order;
 import com.creelayer.marketplace.crm.order.core.model.OrderCustomer;
 import com.creelayer.marketplace.crm.order.core.model.OrderInvoice;
 import com.creelayer.marketplace.crm.order.core.model.Realm;
+import com.creelayer.marketplace.crm.order.core.outgoing.CustomerProvider;
+import com.creelayer.marketplace.crm.order.core.outgoing.OrderInvoiceProvider;
+import com.creelayer.marketplace.crm.order.core.outgoing.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -18,6 +22,7 @@ import static org.mockito.Mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -71,17 +76,20 @@ class CheckoutProcessTest {
         whenOrderSaveReturnOrder();
         when(customerProvider.resolve(anyString())).thenAnswer(i -> new OrderCustomer(UUID.randomUUID(), "Test Test", i.getArgument(0), "test@test.com"));
 
-
         CheckoutCommand.Client client = new CheckoutCommand.Client("380630001123");
-        CheckoutCommand command = new CheckoutCommand(contact, payment, delivery, items);
+        CheckoutCommand command = new CheckoutCommand(realm.uuid, contact, payment, delivery, items);
         command.setClient(client);
 
-        Order order = checkoutProcess.checkout(realm, command);
-        assertNotNull(order.getCustomer());
-        assertNotNull(order.getCustomer().getUuid());
-        assertEquals(order.getCustomer().getEmail(), contact.getEmail());
-        assertEquals(order.getCustomer().getPhone(), client.getIdentity());
-        assertEquals(order.getCustomer().getName(), contact.getName());
+        assertNotNull(checkoutProcess.checkout(command));
+
+        ArgumentCaptor<Order> argument = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository, times(1)).save(argument.capture());
+
+        assertNotNull(argument.getValue().getCustomer());
+        assertNotNull(argument.getValue().getCustomer().getUuid());
+        assertEquals(argument.getValue().getCustomer().getEmail().toString(), contact.getEmail());
+        assertEquals(argument.getValue().getCustomer().getPhone().toString(), client.getIdentity());
+        assertEquals(argument.getValue().getCustomer().getName(), contact.getName());
     }
 
     @Test
@@ -89,14 +97,18 @@ class CheckoutProcessTest {
         whenOrderSaveReturnOrder();
         whenIdentClientReturnCustomer();
 
-        CheckoutCommand command = new CheckoutCommand(contact, payment, delivery, items);
+        CheckoutCommand command = new CheckoutCommand(realm.uuid, contact, payment, delivery, items);
 
-        Order order = checkoutProcess.checkout(realm, command);
-        assertNotNull(order.getCustomer());
-        assertNotNull(order.getCustomer().getUuid());
-        assertEquals(order.getCustomer().getEmail(), contact.getEmail());
-        assertEquals(order.getCustomer().getPhone(), contact.getPhone());
-        assertEquals(order.getCustomer().getName(), contact.getName());
+        assertNotNull(checkoutProcess.checkout(command));
+
+        ArgumentCaptor<Order> argument = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository, times(1)).save(argument.capture());
+
+        assertNotNull(argument.getValue().getCustomer());
+        assertNotNull(argument.getValue().getCustomer().getUuid());
+        assertEquals(argument.getValue().getCustomer().getEmail().toString(), contact.getEmail());
+        assertEquals(argument.getValue().getCustomer().getPhone().toString(), contact.getPhone());
+        assertEquals(argument.getValue().getCustomer().getName(), contact.getName());
     }
 
     @Test
@@ -105,12 +117,16 @@ class CheckoutProcessTest {
         whenIdentClientReturnCustomer();
         when(invoiceProvider.createInvoice(any(Order.class))).thenReturn(new OrderInvoice(UUID.randomUUID()));
 
-        CheckoutCommand command = new CheckoutCommand(contact, payment, delivery, items);
+        CheckoutCommand command = new CheckoutCommand(realm.uuid, contact, payment, delivery, items);
         command.setWithInvoice(true);
 
-        Order order = checkoutProcess.checkout(realm, command);
-        assertNotNull(order.getInvoice());
-        assertNotNull(order.getInvoice().getUuid());
+        assertNotNull(checkoutProcess.checkout(command));
+
+        ArgumentCaptor<Order> argument = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository, times(1)).save(argument.capture());
+
+        assertNotNull(argument.getValue().getInvoice());
+        assertNotNull(argument.getValue().getInvoice().getUuid());
     }
 
 
@@ -119,12 +135,10 @@ class CheckoutProcessTest {
         when(customerProvider.resolve(anyString())).thenThrow(NotFoundException.class);
 
         CheckoutCommand.Client client = new CheckoutCommand.Client("380630001123");
-        CheckoutCommand command = new CheckoutCommand(contact, payment, delivery, items);
+        CheckoutCommand command = new CheckoutCommand(realm.uuid, contact, payment, delivery, items);
         command.setClient(client);
 
-        assertThrows(CheckoutException.class, () -> {
-            checkoutProcess.checkout(realm, command);
-        });
+        assertThrows(CheckoutException.class, () -> checkoutProcess.checkout(command));
     }
 
 
@@ -136,6 +150,7 @@ class CheckoutProcessTest {
         when(orderRepository.save(any(Order.class))).thenAnswer(i -> {
             Order order = i.getArgument(0);
             ReflectionTestUtils.setField(order, "uuid", UUID.randomUUID());
+            ReflectionTestUtils.setField(order, "createdAt", LocalDateTime.now());
             return order;
         });
     }

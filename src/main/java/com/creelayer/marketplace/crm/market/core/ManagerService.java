@@ -4,7 +4,7 @@ import com.creelayer.marketplace.crm.market.core.command.CreateManagerCommand;
 import com.creelayer.marketplace.crm.market.core.command.UpdatePermissionCommand;
 import com.creelayer.marketplace.crm.market.core.exception.ManagerNotFoundException;
 import com.creelayer.marketplace.crm.market.core.exception.MarketNotfoundException;
-import com.creelayer.marketplace.crm.market.core.incoming.ManagerDetailDistributor;
+import com.creelayer.marketplace.crm.market.core.incoming.ManagerDetailProvider;
 import com.creelayer.marketplace.crm.market.core.incoming.ManagerManage;
 import com.creelayer.marketplace.crm.market.core.model.Account;
 import com.creelayer.marketplace.crm.market.core.model.Manager;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-public class ManagerService implements ManagerManage, ManagerDetailDistributor {
+public class ManagerService implements ManagerManage, ManagerDetailProvider {
 
     private final ManagerRepository managerRepository;
 
@@ -28,7 +28,8 @@ public class ManagerService implements ManagerManage, ManagerDetailDistributor {
 
     private final ManagerPermissionProvider permissionProvider;
 
-    public ManagerView getManager(UUID uuid) {
+    public ManagerView detail(UUID uuid) {
+
         Manager manager = managerRepository.findById(uuid)
                 .orElseThrow(() -> new ManagerNotFoundException("Manager not found"));
 
@@ -37,18 +38,21 @@ public class ManagerService implements ManagerManage, ManagerDetailDistributor {
         return new ManagerView(manager, permissions);
     }
 
-    public Manager addManager(CreateManagerCommand command) {
+    @Override
+    public UUID addManager(CreateManagerCommand command) {
 
-        Account account = new Account(command.getAccount());
-        Market market = marketRepository.findById(command.getMarket())
+        Account account = new Account(command.account());
+
+        Market market = marketRepository.findById(command.market())
                 .orElseThrow(() -> new MarketNotfoundException("Market not found"));
 
         if (managerRepository.existsByMarketAndAccount(market, account))
             throw new ManagerException("Manager already exist");
 
-        return managerRepository.save(new Manager(account, market));
+        return managerRepository.save(new Manager(account, market)).getUuid();
     }
 
+    @Override
     public void updatePermissions(UpdatePermissionCommand command) {
 
         Manager manager = managerRepository.findById(command.getManager())
@@ -57,6 +61,7 @@ public class ManagerService implements ManagerManage, ManagerDetailDistributor {
         permissionProvider.updatePermissions(manager, command.getScopes());
     }
 
+    @Override
     public void remove(UUID uuid) {
 
         Manager manager = managerRepository.findById(uuid)

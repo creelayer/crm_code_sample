@@ -10,7 +10,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AddOrderItemCommand {
 
-    private UUID uuid;
+    private UUID order;
 
     private String sku;
 

@@ -12,7 +12,7 @@ import org.springframework.data.domain.AbstractAggregateRoot;
 import java.time.LocalDateTime;
 
 @MappedSuperclass
-public class Aggregate<T extends AbstractAggregateRoot<T>> extends AbstractAggregateRoot<T> {
+public abstract class Aggregate<T extends AbstractAggregateRoot<T>> extends AbstractAggregateRoot<T> {
 
     @Setter
     @Getter

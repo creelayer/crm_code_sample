@@ -4,31 +4,31 @@ import com.creelayer.activity.entity.ActivityEntity;
 import com.creelayer.activity.storage.ActivityStorage;
 import com.creelayer.activity.entity.ActivityIdentity;
 import com.creelayer.activity.data.ActivityLog;
+import com.creelayer.marketplace.crm.common.NotFoundException;
 import com.creelayer.marketplace.crm.common.reaml.RealmIdentity;
-import com.creelayer.marketplace.crm.order.core.OrderManageProcess;
-import com.creelayer.marketplace.crm.order.core.OrderRepository;
-import com.creelayer.marketplace.crm.order.core.command.RemoveOrderItemCountCommand;
-import com.creelayer.marketplace.crm.order.core.model.Order;
+import com.creelayer.marketplace.crm.order.core.incoming.OrderManageProcess;
+import com.creelayer.marketplace.crm.order.core.command.RemoveOrderItemCommand;
+import com.creelayer.marketplace.crm.common.handler.QueryHandler;
+import com.creelayer.marketplace.crm.order.core.outgoing.OrderRepository;
+import com.creelayer.marketplace.crm.order.core.projection.OrderSearchResult;
+import com.creelayer.marketplace.crm.order.core.projection.OrderShortDetail;
+import com.creelayer.marketplace.crm.order.core.projection.OrderViewDetail;
+import com.creelayer.marketplace.crm.order.core.query.OrderSearchQuery;
 import com.creelayer.marketplace.crm.order.http.dto.*;
 import com.creelayer.marketplace.crm.order.http.mapper.OrderMapper;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.UUID;
 
 @AllArgsConstructor
 @RestController
 @RequestMapping("order")
 public class OrderController {
-
-    private OrderRepository orderRepository;
 
     private OrderManageProcess orderManage;
 
@@ -36,67 +36,71 @@ public class OrderController {
 
     private ActivityStorage activityStorage;
 
-    @JsonIgnoreProperties({"items"})
+    private QueryHandler<OrderSearchQuery, Page<OrderSearchResult>> search;
+
+    private OrderRepository orderRepository;
+
     @PreAuthorize("hasPermission(#realm, 'order_read')")
     @GetMapping("")
-    public Page<OrderSearchResultResponse> index(
+    public Page<OrderSearchResult> index(
             @RequestHeader("X-Market-Identity") RealmIdentity realm,
-            @Valid OrderSearchFilter filter,
-            @PageableDefault(sort = {"createdAt"}, size = 50, direction = Sort.Direction.DESC) Pageable pageable
+            @Valid OrderSearchFilter filter
     ) {
-        return orderRepository.search(realm, orderMapper.map(filter), pageable, OrderSearchResultResponse.class);
+        return search.ask(orderMapper.map(realm, filter));
     }
 
-    @PreAuthorize("hasPermission(#order.realm, 'order_read')")
+    @PreAuthorize("hasPermission(#order, 'Order', 'order_read')")
     @GetMapping("{order}/activity")
-    public List<ActivityEntity> activity(@PathVariable Order order) {
-        return activityStorage.findAll(new ActivityIdentity(order.getUuid().toString(), order.getClass()));
+    public List<ActivityEntity> activity(@PathVariable UUID order) {
+        return activityStorage.findAll(new ActivityIdentity(order.toString(), order.getClass()));
     }
 
-    @PreAuthorize("hasPermission(#order.realm, 'order_read')")
+    @PreAuthorize("hasPermission(#order, 'Order', 'order_read')")
     @GetMapping("{order}")
-    public OrderViewResponse view(@PathVariable Order order) {
-        return orderMapper.viewMap(order);
+    public OrderViewDetail view(@PathVariable UUID order) {
+        return orderRepository.findByUuid(order, OrderViewDetail.class)
+                .orElseThrow(() -> new NotFoundException("Order not found"));
     }
 
-    @PreAuthorize("hasPermission(#order.realm, 'order_read')")
+    @PreAuthorize("hasPermission(#order, 'Order', 'order_read')")
     @GetMapping("{order}/short")
-    public OrderShortDetailResponse shortView(@PathVariable Order order) {
-        return orderMapper.shortMap(order);
+    public OrderShortDetail shortView(@PathVariable UUID order) {
+        return orderRepository.findByUuid(order, OrderShortDetail.class)
+                .orElseThrow(() -> new NotFoundException("Order not found"));
     }
 
-    @ActivityLog(data = "returnObject.status", type = "ORDER_UPDATE", comment = "#request.comment")
-    @PreAuthorize("hasPermission(#order.realm, 'order_manage')")
+    @ActivityLog(data = "#request", entity = "#order", type = "ORDER_UPDATE", comment = "#request.comment")
+    @PreAuthorize("hasPermission(#order, 'Order', 'order_manage')")
     @PostMapping("{order}/status")
-    public OrderViewResponse updateStatus(@PathVariable Order order, @Valid @RequestBody UpdateOrderStatusRequest request) {
-        return orderMapper.viewMap(orderManage.manage(orderMapper.map(order, request)));
+    public void updateStatus(@PathVariable UUID order, @Valid @RequestBody UpdateOrderStatusRequest request) {
+        orderManage.manage(orderMapper.map(order, request));
     }
 
-    @ActivityLog(data = "returnObject.payoutStatus", type = "ORDER_UPDATE", comment = "'payout'")
-    @PreAuthorize("hasPermission(#order.realm, 'order_manage')")
+    @ActivityLog(data = "''", entity = "#order", type = "ORDER_CONFIRM_PAYOUT")
+    @PreAuthorize("hasPermission(#order, 'Order', 'order_manage')")
     @PostMapping("{order}/confirm-payout")
-    public OrderViewResponse confirmPayout(@PathVariable Order order) {
-        return orderMapper.viewMap(orderManage.confirmPayout(order.getUuid()));
+    public void confirmPayout(@PathVariable UUID order) {
+        orderManage.confirmPayout(order);
     }
 
-    @ActivityLog(data = "returnObject.items", type = "ORDER_ADD_ITEM")
-    @PreAuthorize("hasPermission(#order.realm, 'order_manage')")
+    @ActivityLog(data = "#request", entity = "#order", type = "ORDER_ADD_ITEM")
+    @PreAuthorize("hasPermission(#order, 'Order', 'order_manage')")
     @PostMapping("{order}/item/add")
-    public OrderViewResponse addItem(@PathVariable Order order, @RequestBody @Valid AddOrderItemRequest request) {
-        return orderMapper.viewMap(orderManage.addItem(orderMapper.map(order, request)));
+    public void addItem(@PathVariable UUID order, @RequestBody @Valid AddOrderItemRequest request) {
+        orderManage.addItem(orderMapper.map(order, request));
     }
 
-    @ActivityLog(data = "returnObject.items", type = "ORDER_REMOVE_ITEM")
-    @PreAuthorize("hasPermission(#order.realm, 'order_manage')")
+    @ActivityLog(data = "#sku", entity = "#order", type = "ORDER_REMOVE_ITEM")
+    @PreAuthorize("hasPermission(#order, 'Order', 'order_manage')")
     @PostMapping("{order}/item/{sku}/remove")
-    public OrderViewResponse removeItem(@PathVariable Order order, @PathVariable String sku) {
-        return orderMapper.viewMap(orderManage.removeItem(new RemoveOrderItemCountCommand(order.getUuid(), sku)));
+    public void removeItem(@PathVariable UUID order, @PathVariable String sku) {
+        orderManage.removeItem(new RemoveOrderItemCommand(order, sku));
     }
 
-    @ActivityLog(data = "returnObject.items", type = "ORDER_UPDATE_ITEM_COUNT")
-    @PreAuthorize("hasPermission(#order.realm, 'order_manage')")
+    @ActivityLog(data = "#request", entity = "#order", type = "ORDER_UPDATE_ITEM_COUNT")
+    @PreAuthorize("hasPermission(#order, 'Order', 'order_manage')")
     @PostMapping("{order}/item/count")
-    public OrderViewResponse updateItemCount(@PathVariable Order order, @RequestBody UpdateOrderItemCountRequest request) {
-        return orderMapper.viewMap(orderManage.updateItemCount(orderMapper.map(order, request)));
+    public void updateItemCount(@PathVariable UUID order, @RequestBody UpdateOrderItemCountRequest request) {
+        orderManage.updateItemCount(orderMapper.map(order, request));
     }
 }

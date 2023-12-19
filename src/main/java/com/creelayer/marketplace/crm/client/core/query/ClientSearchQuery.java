@@ -1,13 +1,23 @@
 package com.creelayer.marketplace.crm.client.core.query;
 
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
+@Getter
 @Setter
-@NoArgsConstructor
+@RequiredArgsConstructor
 public class ClientSearchQuery {
 
-    public String search;
+    private final UUID realm;
+
+    private String search;
+
+    private int page;
+
+    private int size = 50;
 
     public boolean isPhone() {
         return search != null && search.matches("^[0-9]{12}$");

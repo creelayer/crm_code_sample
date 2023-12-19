@@ -10,9 +10,8 @@ import com.creelayer.marketplace.crm.client.core.model.Client;
 import com.creelayer.marketplace.crm.loyalty.core.model.LoyaltySetting;
 import com.creelayer.marketplace.crm.promo.core.incoming.PromoCodeManage;
 import com.creelayer.marketplace.crm.promo.core.incoming.PromoGroupManage;
-import com.creelayer.marketplace.crm.promo.core.model.PromoGroup;
 import com.creelayer.marketplace.crm.settings.core.SettingManage;
-import com.creelayer.marketplace.crm.settings.core.SettingSearch;
+import com.creelayer.marketplace.crm.settings.core.SettingFinder;
 import com.creelayer.marketplace.crm.settings.core.UpsertSettingCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +36,7 @@ public final class ClientRegistrationPromoListener {
 
     private final PromoCodeManage promoCodeManage;
 
-    private final SettingSearch settingSearch;
+    private final SettingFinder settingFinder;
 
     private final SettingManage settingManage;
 
@@ -74,16 +73,15 @@ public final class ClientRegistrationPromoListener {
     }
 
     private UUID getGroupUUID(RealmIdentity realm) {
-        return settingSearch.find(realm.getUuid(), REGISTRATION_PROMO_GROUP_SETTING)
+        return settingFinder.find(realm.getUuid(), REGISTRATION_PROMO_GROUP_SETTING)
                 .map(e -> UUID.fromString(e.getValue(String.class)))
                 .orElseGet(() -> {
-                    CreatePromoGroupCommand command = new CreatePromoGroupCommand(REGISTRATION_PROMO_GROUP_NAME);
-                    PromoGroup group = groupManage.create(new com.creelayer.marketplace.crm.promo.core.model.Realm(realm.getUuid()), command);
-                    settingManage.upsert(new UpsertSettingCommand(realm.getUuid(), REGISTRATION_PROMO_GROUP_SETTING, group.getUuid()));
-                    return group.getUuid();
+                    CreatePromoGroupCommand command = new CreatePromoGroupCommand(realm.getUuid(), REGISTRATION_PROMO_GROUP_NAME);
+                    UUID group = groupManage.create(command);
+                    settingManage.upsert(new UpsertSettingCommand(realm.getUuid(), REGISTRATION_PROMO_GROUP_SETTING, group));
+                    return group;
                 });
     }
-
 
     private record RegistrationPromoSetting(Integer discount, Integer validity) {
     }

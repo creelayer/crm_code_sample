@@ -1,7 +1,7 @@
 package com.creelayer.marketplace.crm.app.http;
 
 import com.creelayer.marketplace.crm.account.core.model.Account;
-import com.creelayer.marketplace.crm.market.core.projection.MarketDetail;
+import com.creelayer.marketplace.crm.market.core.projection.MarketShortDetail;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,12 +25,12 @@ public class Session {
         this.account = account;
     }
 
-    public Session setMarket(MarketDetail available) {
+    public Session setMarket(MarketShortDetail available) {
         this.market = new Market(available.getUuid(), available.getName(), available.getAccount().getUuid().equals(account.getUuid()));
         return this;
     }
 
-    public Session managed(List<MarketDetail> markets) {
+    public Session managed(List<MarketShortDetail> markets) {
         this.available = markets
                 .stream()
                 .map(e -> new Market(e.getUuid(), e.getName(), e.getAccount().getUuid().equals(account.getUuid())))

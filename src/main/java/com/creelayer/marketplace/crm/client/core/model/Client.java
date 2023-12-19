@@ -9,35 +9,40 @@ import org.hibernate.annotations.Type;
 
 import java.util.UUID;
 
-@Getter
 @Accessors(chain = true)
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(indexes = {
         @Index(name = "idx_p_m_u", columnList = "phone, realm", unique = true)}
 )
 public class Client extends Aggregate<Client> {
 
+    @Getter
     @Id
     @GeneratedValue
     private UUID uuid;
 
+    @Getter
     @Embedded
     @AttributeOverrides({@AttributeOverride(name = "uuid", column = @Column(name = "realm"))})
     private Realm realm;
 
+    @Getter
     @Basic(optional = false)
     private String phone;
 
+    @Getter
     @Setter
     @Basic
     private String name;
 
+    @Getter
     @Setter
     @Basic
     private String email;
 
+    @Getter
     @Setter
     @Type(JsonBinaryType.class)
     @Column(columnDefinition = "jsonb")

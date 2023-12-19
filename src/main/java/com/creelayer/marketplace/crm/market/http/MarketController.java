@@ -1,62 +1,70 @@
 package com.creelayer.marketplace.crm.market.http;
 
+import com.creelayer.activity.data.ActivityLog;
 import com.creelayer.marketplace.crm.account.core.model.Account;
+import com.creelayer.marketplace.crm.common.NotFoundException;
 import com.creelayer.marketplace.crm.market.core.incoming.MarketManage;
-import com.creelayer.marketplace.crm.market.core.incoming.MarketSearch;
-import com.creelayer.marketplace.crm.market.core.model.Market;
+import com.creelayer.marketplace.crm.market.core.outgoing.MarketRepository;
+import com.creelayer.marketplace.crm.market.core.projection.MarketDetailView;
 import com.creelayer.marketplace.crm.market.core.projection.MarketSearchResult;
+import com.creelayer.marketplace.crm.market.core.query.MarketSearchQuery;
 import com.creelayer.marketplace.crm.market.http.dto.CreateMarketRequest;
 import com.creelayer.marketplace.crm.market.http.dto.MarketSearchFilter;
 import com.creelayer.marketplace.crm.market.http.dto.UpdateMarketRequest;
 import com.creelayer.marketplace.crm.market.http.mapper.MarketMapper;
+import com.creelayer.marketplace.crm.common.handler.QueryHandler;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @AllArgsConstructor
 @RestController
 @RequestMapping("market")
 public class MarketController {
 
-    private MarketManage marketManage;
+    private QueryHandler<MarketSearchQuery, Page<MarketSearchResult>> search;
 
-    private MarketSearch marketSearch;
+    private MarketRepository marketRepository;
+
+    private MarketManage marketManage;
 
     private MarketMapper mapper;
 
     @GetMapping("")
     public Page<MarketSearchResult> index(
             @AuthenticationPrincipal Account account,
-            MarketSearchFilter filter,
-            @PageableDefault Pageable pageable
+            MarketSearchFilter filter
     ) {
-        return marketSearch.search(mapper.map(account.getUuid(), filter), pageable, MarketSearchResult.class);
+        return search.ask(mapper.map(account.getUuid(), filter));
     }
 
-    @PreAuthorize("hasPermission(#market, 'owner')")
+    @PreAuthorize("hasPermission(#market, 'Market', 'owner')")
     @GetMapping("{market}")
-    public Market view(@PathVariable Market market) {
-        return market;
+    public MarketDetailView view(@PathVariable UUID market) {
+        return marketRepository.findByUuid(market, MarketDetailView.class)
+                .orElseThrow(() -> new NotFoundException("Market not found"));
     }
 
+    @ActivityLog(entity = "#account.uuid", data = "#request", type = "MARKET_CREATE")
     @PostMapping("")
-    public Market create(@AuthenticationPrincipal Account account, @RequestBody CreateMarketRequest request) {
-        return marketManage.create(mapper.map(account.getUuid() ,request));
+    public UUID create(@AuthenticationPrincipal Account account, @RequestBody CreateMarketRequest request) {
+        return marketManage.create(mapper.map(account.getUuid(), request));
     }
 
-    @PreAuthorize("hasPermission(#market, 'owner')")
+    @ActivityLog(entity = "#market", data = "#request", type = "MARKET_UPDATE")
+    @PreAuthorize("hasPermission(#market, 'Market', 'owner')")
     @PutMapping("{market}")
-    public Market update(@PathVariable Market market, @RequestBody UpdateMarketRequest request) {
-        return marketManage.update(mapper.map(market.getUuid(), request));
+    public void update(@PathVariable UUID market, @RequestBody UpdateMarketRequest request) {
+        marketManage.update(mapper.map(market, request));
     }
 
-    @PreAuthorize("hasPermission(#market, 'owner')")
+    @PreAuthorize("hasPermission(#market, 'Market', 'owner')")
     @DeleteMapping("{market}")
-    public void delete(@PathVariable Market market) {
-        marketManage.remove(market.getUuid());
+    public void delete(@PathVariable UUID market) {
+        marketManage.remove(market);
     }
 }

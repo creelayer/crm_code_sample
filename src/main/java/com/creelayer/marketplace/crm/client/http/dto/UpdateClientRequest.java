@@ -12,9 +12,6 @@ import org.hibernate.validator.constraints.Length;
 @AllArgsConstructor
 public class UpdateClientRequest {
 
-    @Pattern(regexp = "^[0-9]{12}$")
-    public String phone;
-
     @Length(max = 255)
     @Email
     public String email;

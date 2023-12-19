@@ -8,9 +8,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "orders")
 public class Order extends Aggregate<Order> {
@@ -79,7 +81,9 @@ public class Order extends Aggregate<Order> {
         this.realm = realm;
         this.customer = customer;
         this.contact = contact;
-        this.items = items;
+
+        this.items = new HashSet<>(items.stream().collect(Collectors.toMap(OrderItem::getSku, Function.identity()))
+                .values());
 
         this.payoutStatus = items.stream().anyMatch(e -> e.getCashback() > 0) ?
                 PayoutStatus.REQUIRED : this.payoutStatus;

@@ -14,7 +14,7 @@ public class UpdatePromoGroupCommand {
         ACTIVE, DISABLED
     }
 
-    private UUID uuid;
+    private UUID group;
 
     public Status status;
 

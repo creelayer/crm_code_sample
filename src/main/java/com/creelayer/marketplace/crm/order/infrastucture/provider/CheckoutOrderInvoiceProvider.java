@@ -1,18 +1,18 @@
 package com.creelayer.marketplace.crm.order.infrastucture.provider;
 
+import com.creelayer.marketplace.crm.common.handler.QueryHandler;
 import com.creelayer.wallet.client.InvoiceApi;
 import com.creelayer.wallet.client.WalletApiBuilder;
 import com.creelayer.wallet.client.exception.WalletException;
 import com.creelayer.marketplace.crm.common.reaml.RealmIdentity;
 import com.creelayer.marketplace.crm.common.reaml.RealmIdentityProvider;
-import com.creelayer.marketplace.crm.client.core.incoming.ClientBalanceDistributor;
-import com.creelayer.marketplace.crm.client.core.command.BalanceResolveCommand;
+import com.creelayer.marketplace.crm.client.core.query.BalanceDetailQuery;
 import com.creelayer.marketplace.crm.client.core.model.Balance;
 import com.creelayer.marketplace.crm.market.core.model.Market;
 import com.creelayer.marketplace.crm.market.core.outgoing.MarketRepository;
 import com.creelayer.marketplace.crm.order.core.exception.OrderInvoiceException;
 import com.creelayer.marketplace.crm.order.core.model.Order;
-import com.creelayer.marketplace.crm.order.core.OrderInvoiceProvider;
+import com.creelayer.marketplace.crm.order.core.outgoing.OrderInvoiceProvider;
 import com.creelayer.marketplace.crm.order.core.model.OrderInvoice;
 import com.creelayer.marketplace.crm.order.core.model.OrderItem;
 import com.creelayer.wallet.client.dto.Invoice;
@@ -34,7 +34,7 @@ public final class CheckoutOrderInvoiceProvider implements OrderInvoiceProvider 
 
     private final MarketRepository marketRepository;
 
-    private final ClientBalanceDistributor clientBalanceDistributor;
+    private QueryHandler<BalanceDetailQuery, Balance> balanceResolver;
 
     private final WalletApiBuilder walletBuilder;
 
@@ -86,7 +86,7 @@ public final class CheckoutOrderInvoiceProvider implements OrderInvoiceProvider 
         if (order.getPayouts().isEmpty())
             return null;
 
-        Balance balance = clientBalanceDistributor.getClientBalance(new BalanceResolveCommand(order.getCustomer().getUuid(), true));
+        Balance balance = balanceResolver.ask(new BalanceDetailQuery(order.getCustomer().getUuid(), true));
 
         return order.getPayouts()
                 .stream()
@@ -114,8 +114,8 @@ public final class CheckoutOrderInvoiceProvider implements OrderInvoiceProvider 
         Map<String, String> meta = new HashMap<>();
         meta.put("order_id", order.getUuid().toString());
         meta.put("name", order.getContact().getName());
-        meta.put("phone", order.getContact().getPhone());
-        meta.put("email", order.getContact().getEmail());
+        meta.put("phone", order.getContact().getPhone().toString());
+        meta.put("email", order.getContact().getEmail().toString());
 
         for (OrderItem item : order.getItems())
             meta.put("product_item_" + item.getSku(), item.toString());

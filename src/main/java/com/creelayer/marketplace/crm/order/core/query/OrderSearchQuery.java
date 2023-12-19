@@ -17,6 +17,8 @@ public class OrderSearchQuery {
         NONE, REQUIRED, COMPLETE
     }
 
+    public UUID realm;
+
     public UUID customer;
 
     public String search;
@@ -29,11 +31,16 @@ public class OrderSearchQuery {
 
     public PayoutStatus payout;
 
-    public OrderSearchQuery(String search) {
+    public int page;
+
+    public int size = 50;
+
+    public OrderSearchQuery(UUID realm, String search) {
         this.search = search;
     }
 
-    public OrderSearchQuery(UUID customer) {
+    public OrderSearchQuery(UUID realm, UUID customer) {
+        this.realm = realm;
         this.customer = customer;
     }
 

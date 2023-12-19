@@ -25,13 +25,13 @@ public class ClientSearchSpecification implements Specification<Client> {
         predicates.add(cb.equal(root.get("realm"), this.realm));
 
         if (query.isPhone())
-            predicates.add(cb.equal(root.get("phone"), query.search));
+            predicates.add(cb.like(cb.lower(root.get("phone")), "%" + query.getSearch().toLowerCase() + "%"));
 
         else if (query.isEmail())
-            predicates.add(cb.equal(root.get("email"), query.search.toLowerCase()));
+            predicates.add(cb.equal(root.get("email"), query.getSearch().toLowerCase()));
 
-        else if (query.search != null)
-            predicates.add(cb.like(cb.lower(root.get("name")), "%" + query.search.toLowerCase() + "%"));
+        else if (query.getSearch() != null)
+            predicates.add(cb.like(cb.lower(root.get("name")), "%" + query.getSearch().toLowerCase() + "%"));
 
 
         return cb.and(predicates.toArray(new Predicate[0]));

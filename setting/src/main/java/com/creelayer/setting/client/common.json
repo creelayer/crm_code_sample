@@ -1,0 +1,12 @@
+{
+  "_id": "_design/common",
+  "views": {
+    "public": {
+      "map": "function (doc) {\n if(!doc.mid && doc.name && doc.access && doc.access === \"PUBLIC\") {\n        emit(doc.name, {name: doc.name, type: doc.type, value: doc.value});\n    }\n}"
+    },
+    "all": {
+      "map": "function (doc) {\n if(!doc.mid && doc.name) {\n        emit(doc.name, {_id: doc._id, _rev:doc._rev, name: doc.name, editable:doc.editable, deletable: doc.deletable, access: doc.access, type: doc.type, value: doc.value});\n    }\n}"
+    }
+  },
+  "language": "javascript"
+}

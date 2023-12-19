@@ -1,12 +1,12 @@
 package com.creelayer.marketplace.crm.vocabulary.core.outgoing;
 
-import com.creelayer.marketplace.crm.vocabulary.core.incoming.VocabularySearch;
+import com.creelayer.marketplace.crm.common.handler.DynamicProjectionHandler;
 import com.creelayer.marketplace.crm.vocabulary.core.model.Vocabulary;
 
 import java.util.Optional;
 import java.util.UUID;
 
-public interface VocabularyRepository extends VocabularySearch {
+public interface VocabularyRepository extends DynamicProjectionHandler {
 
     Optional<Vocabulary> findById(UUID id);
 

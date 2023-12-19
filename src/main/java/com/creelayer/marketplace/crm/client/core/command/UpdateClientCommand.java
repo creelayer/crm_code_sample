@@ -1,17 +1,7 @@
 package com.creelayer.marketplace.crm.client.core.command;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 import java.util.UUID;
 
-@Getter
-@AllArgsConstructor
-public class UpdateClientCommand {
+public record UpdateClientCommand(UUID client, String email, String name) {
 
-    private final UUID uuid;
-
-    public String email;
-
-    public String name;
 }

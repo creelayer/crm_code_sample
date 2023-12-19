@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -20,7 +22,7 @@ public class GeneratePromoCodeCommand {
 
     private final UUID group;
 
-    private final UUID owner;
+    private UUID owner;
 
     @Builder.Default
     private int count = 1;
@@ -38,11 +40,19 @@ public class GeneratePromoCodeCommand {
     @Builder.Default
     private  Status status = Status.ACTIVE;
 
-    @Builder.Default
     private Integer maxUses = 1;
 
+    @Builder.Default
+    private List<Condition> conditions = new ArrayList<>();
 
-    public GeneratePromoCodeCommand(UUID group, UUID owner, int count, String name, String code, TYPE type, long discount, LocalDateTime expiredAt, Status status, Integer maxUses) {
+    public GeneratePromoCodeCommand(UUID group, UUID owner, int count, String name, String code, TYPE type, long discount, LocalDateTime expiredAt, Status status, Integer maxUses, List<Condition> conditions) {
+
+        if (code == null && count <= 0)
+            throw new IllegalStateException("Invalid code generate iterations");
+
+        if (code != null && count > 1)
+            throw new IllegalStateException("Max code generate for custom code is one");
+
         this.group = group;
         this.owner = owner;
         this.count = count;
@@ -53,16 +63,6 @@ public class GeneratePromoCodeCommand {
         this.expiredAt = expiredAt;
         this.status = status;
         this.maxUses = maxUses;
-
-        if (code == null && count <= 0)
-            throw new IllegalStateException("Invalid code generate iterations");
-
-        if (code != null && count > 1)
-            throw new IllegalStateException("Max code generate for custom code is one");
-
-        if (maxUses <= 0)
-            throw new IllegalStateException("Invalid max code usage");
+        this.conditions = conditions;
     }
-
-
 }

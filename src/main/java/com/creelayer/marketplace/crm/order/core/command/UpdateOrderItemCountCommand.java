@@ -9,7 +9,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UpdateOrderItemCountCommand {
 
-    private UUID uuid;
+    private UUID order;
 
     private String sku;
 

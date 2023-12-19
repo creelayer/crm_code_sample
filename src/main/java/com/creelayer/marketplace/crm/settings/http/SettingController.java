@@ -1,6 +1,7 @@
 package com.creelayer.marketplace.crm.settings.http;
 
 import com.creelayer.marketplace.crm.common.NotFoundException;
+import com.creelayer.marketplace.crm.common.handler.QueryHandler;
 import com.creelayer.marketplace.crm.common.reaml.RealmIdentity;
 import com.creelayer.marketplace.crm.settings.core.*;
 import com.creelayer.marketplace.crm.settings.http.dto.UpdateSettingRequest;
@@ -18,20 +19,22 @@ import java.util.List;
 @RequestMapping("/setting")
 public class SettingController {
 
+    private QueryHandler<SearchSettingQuery, List<SettingView>> search;
+
     private SettingManage settingManage;
 
-    private SettingSearch settingSearch;
+    private SettingFinder settingFinder;
 
     @PreAuthorize("hasPermission(#realm, 'setting_manage')")
     @GetMapping("")
     public List<SettingView> search(@RequestHeader("X-Market-Identity") RealmIdentity realm) {
-        return settingSearch.search(new SearchSettingQuery(realm.getUuid()));
+        return search.ask(new SearchSettingQuery(realm.getUuid()));
     }
 
     @PreAuthorize("hasPermission(#realm, 'setting_manage')")
     @GetMapping("{name}")
     public SettingView view(@RequestHeader("X-Market-Identity") RealmIdentity realm, @PathVariable String name) {
-        return settingSearch.find(realm.getUuid(), name).orElseThrow(() -> new NotFoundException("Setting no found"));
+        return settingFinder.find(realm.getUuid(), name).orElseThrow(() -> new NotFoundException("Setting no found"));
     }
 
     @PreAuthorize("hasPermission(#realm, 'setting_manage')")

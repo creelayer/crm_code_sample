@@ -1,6 +1,6 @@
 package com.creelayer.marketplace.crm.order.core.support;
 
-import com.creelayer.marketplace.crm.order.core.CheckoutPromoCodeProvider;
+import com.creelayer.marketplace.crm.order.core.outgoing.CheckoutPromoCodeProvider;
 import com.creelayer.marketplace.crm.order.core.command.AddOrderItemCommand;
 import com.creelayer.marketplace.crm.order.core.model.OrderItem;
 import lombok.RequiredArgsConstructor;

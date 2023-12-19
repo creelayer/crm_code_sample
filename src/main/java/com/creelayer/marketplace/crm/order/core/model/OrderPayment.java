@@ -5,14 +5,14 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class OrderPayment {
+public final class OrderPayment {
 
     public enum Type {
         NONE, CASH, CARD, TRANSFER
     }
 
-    private Type type;
+    private final Type type;
 
-    private boolean useBalance;
+    private final boolean useBalance;
 }
 

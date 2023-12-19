@@ -26,7 +26,7 @@ public class MarketService implements UserDetailsService, MarketManage {
                 .orElseThrow(() -> new UsernameNotFoundException("Market not found"));
     }
 
-    public Market create(CreateMarketCommand command) {
+    public UUID create(CreateMarketCommand command) {
 
         Account account = new Account(command.getAccount());
         Market market = new Market(account, command.getName())
@@ -35,11 +35,11 @@ public class MarketService implements UserDetailsService, MarketManage {
                 .setEmail(command.getEmail());
 
         market.addManager(new Manager(account, market));
-        return marketRepository.save(market);
+        return marketRepository.save(market).getUuid();
     }
 
     @Override
-    public Market update(UpdateMarketCommand command) {
+    public void update(UpdateMarketCommand command) {
         Market market = marketRepository.findById(command.getMarket())
                 .orElseThrow(() -> new MarketNotfoundException("market not found"));
 
@@ -47,7 +47,7 @@ public class MarketService implements UserDetailsService, MarketManage {
                 .setPhone(command.getPhone())
                 .setEmail(command.getEmail());
 
-        return null;
+        marketRepository.save(market);
     }
 
     public void remove(UUID uuid) {

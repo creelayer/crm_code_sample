@@ -1,13 +1,17 @@
 package com.creelayer.marketplace.crm.promo.core;
 
+import com.creelayer.marketplace.crm.promo.core.command.GeneratePromoCodeCommand;
 import com.creelayer.marketplace.crm.promo.core.exeption.PromoException;
+import com.creelayer.marketplace.crm.promo.core.model.PromoCode;
+import com.creelayer.marketplace.crm.promo.core.model.PromoCodeClient;
+import com.creelayer.marketplace.crm.promo.core.model.PromoGroup;
 import com.creelayer.marketplace.crm.promo.core.model.Realm;
 import com.creelayer.marketplace.crm.promo.core.outgoing.PromoCodeRepository;
+import com.creelayer.marketplace.crm.promo.core.support.PromoConditionMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 @RequiredArgsConstructor
@@ -15,6 +19,8 @@ public class PromoCodeGenerator {
 
 
     private final PromoCodeRepository promoCodeRepository;
+
+    private final PromoConditionMapper mapper = new PromoConditionMapper();
 
     @Setter
     private int codeLength = 5;
@@ -25,11 +31,22 @@ public class PromoCodeGenerator {
     @Setter
     private String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
-    public List<String> generate(Realm realm, int count) {
-        List<String> codes = new ArrayList<>();
+    public Codes generate(PromoGroup group, GeneratePromoCodeCommand command) {
 
-        for (int i = 0; i < count; i++)
-            codes.add(findNexCode(realm));
+        Codes codes = new Codes();
+
+        for (int i = 0; i < command.getCount(); i++)
+            codes.add(new PromoCode(
+                    group,
+                    PromoCode.Status.valueOf(command.getStatus().name()),
+                    command.getName(),
+                    command.getCode() != null ? command.getCode() : findNexCode(group.getRealm()),
+                    PromoCode.TYPE.valueOf(command.getType().name()),
+                    command.getDiscount(),
+                    command.getExpiredAt(),
+                    command.getMaxUses(),
+                    mapper.map(command.getConditions())
+            ));
 
         return codes;
     }
@@ -54,5 +71,11 @@ public class PromoCodeGenerator {
             salt.append(chars.charAt(index));
         }
         return salt.toString().toUpperCase();
+    }
+
+    public static class Codes extends ArrayList<PromoCode> {
+        public void setOwner(PromoCodeClient client) {
+            this.forEach(e -> e.setOwner(client));
+        }
     }
 }

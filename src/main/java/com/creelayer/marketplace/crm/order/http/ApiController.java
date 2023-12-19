@@ -1,20 +1,19 @@
 package com.creelayer.marketplace.crm.order.http;
 
 import com.creelayer.marketplace.crm.client.core.model.Client;
+import com.creelayer.marketplace.crm.common.NotFoundException;
 import com.creelayer.marketplace.crm.common.reaml.RealmIdentity;
-import com.creelayer.marketplace.crm.order.core.OrderSearch;
-import com.creelayer.marketplace.crm.order.core.model.Order;
-import com.creelayer.marketplace.crm.order.http.dto.OrderApiSearchResultResponse;
+import com.creelayer.marketplace.crm.common.handler.QueryHandler;
+import com.creelayer.marketplace.crm.order.core.outgoing.OrderRepository;
+import com.creelayer.marketplace.crm.order.core.projection.OrderApiSearchResult;
+import com.creelayer.marketplace.crm.order.core.projection.OrderViewDetail;
 import com.creelayer.marketplace.crm.order.core.query.OrderSearchQuery;
-import com.creelayer.marketplace.crm.order.http.dto.OrderApiDetailResponse;
-import com.creelayer.marketplace.crm.order.http.mapper.OrderMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @AllArgsConstructor
 @Validated
@@ -22,21 +21,21 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("v1/order")
 public class ApiController {
 
-    private final OrderSearch search;
+    private QueryHandler<OrderSearchQuery, Page<OrderApiSearchResult>> search;
 
-    private final OrderMapper orderMapper;
+    private OrderRepository repository;
 
     @GetMapping("")
-    public Page<OrderApiSearchResultResponse> orders(
+    public Page<OrderApiSearchResult> orders(
             @RequestHeader("X-Market-Identity") RealmIdentity realm,
-            @RequestHeader("X-Client-Phone") Client client,
-            @PageableDefault(sort = {"createdAt"}, direction = Sort.Direction.DESC, value = 20) Pageable pageable
+            @RequestHeader("X-Client-Phone") Client client
     ) {
-        return search.search(realm, new OrderSearchQuery(client.getUuid()), pageable, OrderApiSearchResultResponse.class);
+        return search.ask(new OrderSearchQuery(realm.getUuid(), client.getUuid()));
     }
 
     @GetMapping("{order}")
-    public OrderApiDetailResponse view(@PathVariable Order order) {
-        return orderMapper.map(order);
+    public OrderViewDetail view(@PathVariable UUID order) {
+        return repository.findByUuid(order, OrderViewDetail.class)
+                .orElseThrow(() -> new NotFoundException("Order not found"));
     }
 }

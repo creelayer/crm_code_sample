@@ -1,5 +1,8 @@
 package com.creelayer.marketplace.crm.order.core.model;
 
+import com.creelayer.marketplace.crm.common.type.Email;
+import com.creelayer.marketplace.crm.common.type.Phone;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Immutable;
@@ -7,11 +10,11 @@ import org.hibernate.annotations.Immutable;
 import java.util.*;
 
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "client")
 @Immutable
-public class OrderCustomer {
+public final class OrderCustomer {
 
     @Id
     @GeneratedValue
@@ -20,20 +23,21 @@ public class OrderCustomer {
     @Basic
     private String name;
 
-    @Basic
-    private String phone;
+    @Embedded
+    private Phone phone;
 
-    @Basic
-    private String email;
+    @Embedded
+    private Email email;
 
+    @JsonCreator
     public OrderCustomer(UUID uuid, String name, String phone, String email) {
+        this.uuid = uuid;
+        this.name = name;
+        this.phone = new Phone(phone);
+        this.email = new Email(email);
+    }
 
-        if (!phone.matches("^[0-9]{12}$"))
-            throw new IllegalStateException("Invalid phone format");
-
-        if (email != null && !email.matches("^(.+)@(\\S+)$"))
-            throw new IllegalStateException("Invalid email format");
-
+    public OrderCustomer(UUID uuid, String name, Phone phone, Email email) {
         this.uuid = uuid;
         this.name = name;
         this.phone = phone;

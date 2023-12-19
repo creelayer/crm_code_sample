@@ -6,10 +6,14 @@ import lombok.*;
 import org.springframework.data.geo.Point;
 
 import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @RequiredArgsConstructor
 public class CheckoutCommand {
+
+    @NonNull
+    private final UUID realm;
 
     @NonNull
     private final Contact contact;

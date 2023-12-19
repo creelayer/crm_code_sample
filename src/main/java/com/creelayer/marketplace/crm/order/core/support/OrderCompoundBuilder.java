@@ -1,8 +1,8 @@
 package com.creelayer.marketplace.crm.order.core.support;
 
-import com.creelayer.marketplace.crm.order.core.CheckoutPromoCodeProvider;
-import com.creelayer.marketplace.crm.order.core.CustomerProvider;
-import com.creelayer.marketplace.crm.order.core.OrderInvoiceProvider;
+import com.creelayer.marketplace.crm.order.core.outgoing.CheckoutPromoCodeProvider;
+import com.creelayer.marketplace.crm.order.core.outgoing.CustomerProvider;
+import com.creelayer.marketplace.crm.order.core.outgoing.OrderInvoiceProvider;
 import com.creelayer.marketplace.crm.order.core.command.CheckoutCommand;
 import com.creelayer.marketplace.crm.order.core.model.*;
 import com.creelayer.marketplace.crm.order.core.model.OrderCustomer;
@@ -10,10 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Accessors(chain = true)
@@ -83,8 +80,8 @@ public class OrderCompoundBuilder {
 
         return customerProvider.identity(new CustomerProvider.Contact(
                 contact.getName(),
-                contact.getPhone(),
-                contact.getEmail()
+                contact.getPhone().toString(),
+                contact.getEmail().toString()
         ));
     }
 
@@ -93,7 +90,7 @@ public class OrderCompoundBuilder {
         if (contact != null)
             return contact;
 
-        return new OrderContact(customer.getName(), customer.getPhone(), customer.getEmail(), "");
+        return new OrderContact(customer.getName(), customer.getPhone(), customer.getEmail());
     }
 
     private Set<OrderItem> mapItems(Set<CheckoutCommand.Item> items) {

@@ -15,7 +15,7 @@ import java.util.UUID;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface VocabularyMapper {
 
-    VocabularySearchQuery map(VocabularySearchFilter filter);
+    VocabularySearchQuery map(UUID realm, VocabularySearchFilter filter);
 
     @Mapping(target = "vocabulary", source = "uuid")
     @Mapping(target = "forward", source = "request.isForward")

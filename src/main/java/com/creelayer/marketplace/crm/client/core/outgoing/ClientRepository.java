@@ -1,13 +1,13 @@
 package com.creelayer.marketplace.crm.client.core.outgoing;
 
-import com.creelayer.marketplace.crm.client.core.incoming.ClientSearch;
 import com.creelayer.marketplace.crm.client.core.model.Realm;
 import com.creelayer.marketplace.crm.client.core.model.Client;
+import com.creelayer.marketplace.crm.common.handler.DynamicProjectionHandler;
 
 import java.util.Optional;
 import java.util.UUID;
 
-public interface ClientRepository extends ClientSearch {
+public interface ClientRepository extends DynamicProjectionHandler {
 
     Optional<Client> findById(UUID uuid);
 

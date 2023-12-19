@@ -6,17 +6,16 @@ import lombok.*;
 import java.util.Objects;
 
 @Getter
-@EqualsAndHashCode(of={"sku"})
-@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderItem {
 
-    private final String sku;
+    private String sku;
 
-    private final String name;
+    private String name;
 
-    private final String url;
+    private String url;
 
-    private final long amount;
+    private long amount;
 
     private int count;
 

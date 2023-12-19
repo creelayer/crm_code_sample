@@ -1,28 +1,28 @@
 package com.creelayer.marketplace.crm.promo.http;
 
 import com.creelayer.activity.data.ActivityLog;
+import com.creelayer.marketplace.crm.common.NotFoundException;
 import com.creelayer.marketplace.crm.common.reaml.RealmIdentity;
+import com.creelayer.marketplace.crm.common.handler.QueryHandler;
 import com.creelayer.marketplace.crm.promo.core.incoming.PromoCodeManage;
-import com.creelayer.marketplace.crm.promo.core.incoming.PromoCodeSearch;
-import com.creelayer.marketplace.crm.promo.core.model.Realm;
-import com.creelayer.marketplace.crm.promo.core.model.PromoCondition;
+import com.creelayer.marketplace.crm.promo.core.outgoing.PromoCodeRepository;
 import com.creelayer.marketplace.crm.promo.core.projection.PromoCodeSearchResult;
-import com.creelayer.marketplace.crm.promo.http.dto.CreatePromoCodeRequest;
-import com.creelayer.marketplace.crm.promo.http.dto.ManagePromoConditionRequest;
+import com.creelayer.marketplace.crm.promo.core.projection.PromoCodeViewDetail;
+import com.creelayer.marketplace.crm.promo.core.query.PromoCodeSearchQuery;
+import com.creelayer.marketplace.crm.promo.http.dto.GeneratePromoCodeRequest;
+import com.creelayer.marketplace.crm.promo.http.dto.PromoConditionRequest;
 import com.creelayer.marketplace.crm.promo.core.PromoCodeService;
-import com.creelayer.marketplace.crm.promo.core.model.PromoCode;
 import com.creelayer.marketplace.crm.promo.http.dto.PromoCodeSearchFilter;
-import com.creelayer.marketplace.crm.promo.core.model.PromoGroup;
 import com.creelayer.marketplace.crm.promo.http.dto.UpdatePromoCodeRequest;
 import com.creelayer.marketplace.crm.promo.http.mapper.PromoCodeMapper;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @AllArgsConstructor
 @RestController
@@ -31,7 +31,9 @@ public class PromoCodeController {
 
     private PromoCodeService promoCodeService;
 
-    private PromoCodeSearch promoCodeSearch;
+    private QueryHandler<PromoCodeSearchQuery, Page<PromoCodeSearchResult>> search;
+
+    private PromoCodeRepository codeRepository;
 
     private PromoCodeManage promoCodeManage;
 
@@ -39,47 +41,42 @@ public class PromoCodeController {
 
     @PreAuthorize("hasPermission(#realm, 'promo_code_read') || hasPermission(#realm, 'promo_code_manage')")
     @GetMapping("search")
-    public Page<PromoCodeSearchResult> search(@RequestHeader("X-Market-Identity") RealmIdentity realm, @Valid PromoCodeSearchFilter filter, Pageable pageable) {
-        return promoCodeSearch.search(new Realm(realm.getUuid()), promoCodeMapper.map(filter), pageable, PromoCodeSearchResult.class);
+    public Page<PromoCodeSearchResult> search(@RequestHeader("X-Market-Identity") RealmIdentity realm, @Valid PromoCodeSearchFilter filter) {
+        return search.ask(promoCodeMapper.map(realm.getUuid(), filter));
     }
 
-    @PreAuthorize("hasPermission(#code.group.realm, 'promo_code_read') || hasPermission(#code.group.realm, 'promo_code_manage')")
+    @PreAuthorize("hasPermission(#code, 'PromoCode', 'promo_code_read') || hasPermission(#code, 'PromoCode', 'promo_code_manage')")
     @GetMapping("{code}")
-    public PromoCode view(@PathVariable PromoCode code) {
-        return code;
+    public PromoCodeViewDetail view(@PathVariable UUID code) {
+        return codeRepository.findByUuid(code, PromoCodeViewDetail.class)
+                .orElseThrow(() -> new NotFoundException("Promo code not found"));
     }
 
-    @ActivityLog(entity = "#group", data = "#dto", type = "PROMO_GROUP_CODE_GENERATE")
-    @PreAuthorize(" hasPermission(#group.realm, 'promo_code_manage')")
+    @ActivityLog(entity = "#group", data = "#request", type = "PROMO_GROUP_CODE_GENERATE")
+    @PreAuthorize(" hasPermission(#group, 'PromoGroup', 'promo_code_manage')")
     @PostMapping("generate/{group}")
-    public void generate(@PathVariable PromoGroup group, @Valid @RequestBody CreatePromoCodeRequest request) {
+    public void generate(@PathVariable UUID group, @Valid @RequestBody GeneratePromoCodeRequest request) {
         promoCodeService.generate(promoCodeMapper.map(group, request));
     }
 
-    @ActivityLog(data = "#request", type = "PROMO_CODE_UPDATE")
-    @PreAuthorize("hasPermission(#code.group.realm, 'promo_code_manage')")
+    @ActivityLog(entity = "#code", data = "#request", type = "PROMO_CODE_UPDATE")
+    @PreAuthorize("hasPermission(#code, 'PromoCode', 'promo_code_manage')")
     @PutMapping("{code}")
-    public PromoCode update(@PathVariable PromoCode code, @Valid @RequestBody UpdatePromoCodeRequest request) {
-        return promoCodeManage.update(promoCodeMapper.map(code, request));
-    }
-
-    @PreAuthorize("hasPermission(#code.group.realm, 'promo_code_manage')")
-    @GetMapping("{code}/condition")
-    public List<PromoCondition> getCondition(@PathVariable PromoCode code) {
-        return code.getConditions();
+    public void update(@PathVariable UUID code, @Valid @RequestBody UpdatePromoCodeRequest request) {
+        promoCodeManage.update(promoCodeMapper.map(code, request));
     }
 
     @ActivityLog(entity = "#code", data = "#conditions", type = "PROMO_CODE_CONDITION_UPDATE")
-    @PreAuthorize("hasPermission(#code.group.realm, 'promo_code_manage')")
+    @PreAuthorize("hasPermission(#code, 'PromoCode', 'promo_code_manage')")
     @PostMapping("{code}/condition")
-    public void updateCondition(@PathVariable PromoCode code, @Valid @RequestBody List<ManagePromoConditionRequest> conditions) {
+    public void updateCondition(@PathVariable UUID code, @Valid @RequestBody List<PromoConditionRequest> conditions) {
         promoCodeManage.update(promoCodeMapper.map(code, conditions));
     }
 
     @ActivityLog(entity = "#code", data = "#code", type = "PROMO_CODE_DELETE")
-    @PreAuthorize("hasPermission(#code.group.realm, 'promo_code_manage')")
+    @PreAuthorize("hasPermission(#code, 'PromoCode', 'promo_code_manage')")
     @DeleteMapping("{code}")
-    public void delete(@PathVariable PromoCode code) {
-        promoCodeManage.remove(code.getUuid());
+    public void delete(@PathVariable UUID code) {
+        promoCodeManage.remove(code);
     }
 }

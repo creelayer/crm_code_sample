@@ -1,29 +1,40 @@
 package com.creelayer.marketplace.crm.order.core.model;
 
+import com.creelayer.marketplace.crm.common.type.Email;
+import com.creelayer.marketplace.crm.common.type.Phone;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
 
 @Getter
-public class OrderContact {
+public final class OrderContact {
 
     private final String name;
 
-    private final String phone;
+    private final Phone phone;
 
-    private final String email;
+    private final Email email;
 
     private final String comment;
 
+    @JsonCreator
     public OrderContact(String name, String phone, String email, String comment) {
+        this.name = name;
+        this.phone = new Phone(phone);
+        this.email = new Email(email);
+        this.comment = comment;
+    }
 
-        if (!phone.matches("^[0-9]{12}$"))
-            throw new IllegalStateException("Invalid phone format");
+    public OrderContact(String name, String phone, String email) {
+        this.name = name;
+        this.phone = new Phone(phone);
+        this.email = new Email(email);
+        this.comment = null;
+    }
 
-        if (email != null && !email.matches("^(.+)@(\\S+)$"))
-            throw new IllegalStateException("Invalid email format");
-
+    public OrderContact(String name, Phone phone, Email email) {
         this.name = name;
         this.phone = phone;
         this.email = email;
-        this.comment = comment;
+        this.comment = null;
     }
 }

@@ -17,22 +17,20 @@ public class PromoGroupService implements PromoGroupManage {
     private final PromoGroupRepository groupRepository;
 
     @Override
-    public PromoGroup create(Realm realm, CreatePromoGroupCommand command) {
-
-        PromoGroup group = new PromoGroup(realm, command.getName());
-
-        return groupRepository.save(group);
+    public UUID create(CreatePromoGroupCommand command) {
+        PromoGroup group = new PromoGroup(command.realm(), command.name());
+        return groupRepository.save(group).getUuid();
     }
 
     @Override
-    public PromoGroup update(UpdatePromoGroupCommand command) {
+    public void update(UpdatePromoGroupCommand command) {
 
-        PromoGroup group = groupRepository.findById(command.getUuid())
+        PromoGroup group = groupRepository.findById(command.getGroup())
                 .orElseThrow(() -> new PromoNotFoundException("Group not found"));
 
         group.setName(command.name).setStatus(PromoGroup.Status.valueOf(command.status.name()));
 
-        return groupRepository.save(group);
+        groupRepository.save(group);
     }
 
     @Override

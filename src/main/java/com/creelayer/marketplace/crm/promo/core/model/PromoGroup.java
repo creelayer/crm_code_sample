@@ -38,8 +38,8 @@ public class PromoGroup extends Aggregate<PromoGroup> {
     @Getter
     private LocalDateTime deletedAt;
 
-    public PromoGroup(Realm realm, String name) {
-        this.realm = realm;
+    public PromoGroup(UUID uuid, String name) {
+        this.realm = new Realm(uuid);
         this.name = name;
     }
 }

@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class OrderInvoice {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public final class OrderInvoice {
     private UUID uuid;
 }

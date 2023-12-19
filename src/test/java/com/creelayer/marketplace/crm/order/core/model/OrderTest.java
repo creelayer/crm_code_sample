@@ -3,10 +3,7 @@ package com.creelayer.marketplace.crm.order.core.model;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -140,8 +137,7 @@ class OrderTest {
         items.add(firstItem);
         items.add(secondItem);
 
-        Order order = new Order(realm, defaultCustomer, defaultContact, items);
-        assertEquals(1, order.getItems().size());
+        assertThrows(IllegalStateException.class, () -> new Order(realm, defaultCustomer, defaultContact, items));
     }
 
 

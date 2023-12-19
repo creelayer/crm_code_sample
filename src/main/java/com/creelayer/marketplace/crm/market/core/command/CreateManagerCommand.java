@@ -1,15 +1,7 @@
 package com.creelayer.marketplace.crm.market.core.command;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 import java.util.UUID;
 
-@Getter
-@AllArgsConstructor
-public class CreateManagerCommand {
+public record CreateManagerCommand(UUID market, UUID account) {
 
-    private UUID account;
-
-    private UUID market;
 }

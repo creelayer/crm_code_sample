@@ -7,7 +7,7 @@ import com.creelayer.marketplace.crm.client.core.model.Client;
 import com.creelayer.marketplace.crm.client.core.model.Realm;
 import com.creelayer.marketplace.crm.client.core.model.ClientBalanceKey;
 import com.creelayer.marketplace.crm.order.core.model.Order;
-import com.creelayer.marketplace.crm.order.core.CheckoutPaymentUrlProvider;
+import com.creelayer.marketplace.crm.order.core.outgoing.CheckoutPaymentUrlProvider;
 import com.creelayer.wallet.client.BalanceKey;
 import com.creelayer.wallet.client.PaymentUrlGenerator;
 import com.creelayer.wallet.client.dto.Invoice;
@@ -33,7 +33,7 @@ public final class WalletPayUrlProvider implements CheckoutPaymentUrlProvider {
         if (order.isCardPaymentWithBalance()) {
             RealmIdentity identity = realmProvider.resolve();
             Client client = identityService
-                    .getClient(new Realm(identity.getUuid()), order.getCustomer().getPhone());
+                    .getClient(new Realm(identity.getUuid()), order.getCustomer().getPhone().toString());
             ClientBalanceKey key = client.getBalanceAccessKey();
             return paymentUrlGenerator.getUrl(
                     new BalanceKey(key.getUuid(), key.getSecret()),
